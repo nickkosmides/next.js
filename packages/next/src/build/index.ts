@@ -128,6 +128,7 @@ import { trace, flushAllTraces, setGlobal, type Span } from '../trace'
 import { writeRouteBundleStats } from './route-bundle-stats'
 import {
   detectConflictingPaths,
+  printPrerenderMatchers,
   printCustomRoutes,
   printTreeView,
   copyTracedFiles,
@@ -4643,6 +4644,13 @@ export default async function build(
           hasGSPAndRevalidateZero,
         })
       )
+
+      if (
+        config.experimental.paramMatching &&
+        process.env.NEXT_PRIVATE_DEBUG_PARAM_MATCHING
+      ) {
+        printPrerenderMatchers(prerenderManifest, routesManifest.dynamicRoutes)
+      }
 
       if (bundler === Bundler.Turbopack) {
         await nextBuildSpan
