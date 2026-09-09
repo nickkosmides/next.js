@@ -74,6 +74,8 @@ describe('mcp-server get_errors tool', () => {
           type: 'runtime',
           errorName: 'Error',
           message: 'Test runtime error',
+          fatal: true,
+          boundary: expect.objectContaining({ kind: 'default-global' }),
           stack: expect.arrayContaining([
             expect.objectContaining({
               file: expect.stringContaining('app/runtime-error/page.tsx'),
