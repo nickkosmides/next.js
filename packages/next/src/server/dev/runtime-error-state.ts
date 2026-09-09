@@ -133,6 +133,7 @@ export async function formatRuntimeErrors(
       type: error.type,
       errorName,
       message,
+      fatal: error.fatal,
       stack,
     })
   }
@@ -162,6 +163,7 @@ function isRuntimeErrorStateError(
     (value.type !== 'runtime' &&
       value.type !== 'recoverable' &&
       value.type !== 'console') ||
+    typeof value.fatal !== 'boolean' ||
     !Array.isArray(value.frames)
   ) {
     return false

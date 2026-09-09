@@ -1,3 +1,4 @@
+import type { RuntimeErrorMetadata } from '../../server/dev/hot-reloader-types'
 import { useReducer } from 'react'
 
 import type { FlightRouterState } from '../../shared/lib/app-router-types'
@@ -178,10 +179,12 @@ interface FastRefreshAction {
 interface UnhandledErrorAction {
   type: typeof ACTION_UNHANDLED_ERROR
   reason: Error
+  metadata?: RuntimeErrorMetadata
 }
 interface UnhandledRejectionAction {
   type: typeof ACTION_UNHANDLED_REJECTION
   reason: Error
+  metadata?: RuntimeErrorMetadata
 }
 
 interface DebugInfoAction {
@@ -412,6 +415,37 @@ function getInitialState(
   }
 }
 
+export function mergeErrorEvent(
+  events: readonly SupportedErrorEvent[],
+  pendingEvent: SupportedErrorEvent,
+  getOwnerStack: (error: Error) => string | null | undefined
+): readonly SupportedErrorEvent[] {
+  const matchesError = (event: SupportedErrorEvent) =>
+    // SpiderMonkey and JavaScriptCore don't include the error message in the stack.
+    // We don't want to dedupe errors with different messages for which we don't have a good stack.
+    '' + event.error === '' + pendingEvent.error &&
+    (event.error.stack === pendingEvent.error.stack ||
+      // TODO: Let ReactDevTools control deduping instead?
+      getStackIgnoringStrictMode(event.error.stack) ===
+        getStackIgnoringStrictMode(pendingEvent.error.stack)) &&
+    getOwnerStack(event.error) === getOwnerStack(pendingEvent.error)
+
+  const duplicateIndex = events.findIndex(matchesError)
+
+  if (duplicateIndex === -1) {
+    return [...events, pendingEvent]
+  }
+
+  const duplicate = events[duplicateIndex]
+  if (pendingEvent.isFatal && !duplicate.isFatal) {
+    return events.map((event, index) =>
+      index === duplicateIndex ? { ...pendingEvent, id: duplicate.id } : event
+    )
+  }
+
+  return events
+}
+
 export function useErrorOverlayReducer(
   routerType: 'pages' | 'app',
   getOwnerStack: (error: Error) => string | null | undefined,
@@ -421,7 +455,8 @@ export function useErrorOverlayReducer(
   function pushErrorFilterDuplicates(
     events: readonly SupportedErrorEvent[],
     id: number,
-    error: Error
+    error: Error,
+    metadata?: RuntimeErrorMetadata
   ): readonly SupportedErrorEvent[] {
     const ownerStack = getOwnerStack(error)
     const frames = parseStack((error.stack || '') + (ownerStack || ''))
@@ -429,32 +464,17 @@ export function useErrorOverlayReducer(
       id,
       error,
       frames,
-      type: isRecoverableError(error)
-        ? 'recoverable'
-        : isConsoleError(error)
-          ? 'console'
-          : 'runtime',
+      isFatal: metadata?.fatal ?? false,
+      type:
+        metadata !== undefined
+          ? 'runtime'
+          : isRecoverableError(error)
+            ? 'recoverable'
+            : isConsoleError(error)
+              ? 'console'
+              : 'runtime',
     }
-    const pendingEvents = events.filter((event) => {
-      // Filter out duplicate errors
-      return (
-        // SpiderMonkey and JavaScriptCore don't include the error message in the stack.
-        // We don't want to dedupe errors with different messages for which we don't have a good stack
-        '' + event.error !== '' + pendingEvent.error ||
-        (event.error.stack !== pendingEvent.error.stack &&
-          // TODO: Let ReactDevTools control deduping instead?
-          getStackIgnoringStrictMode(event.error.stack) !==
-            getStackIgnoringStrictMode(pendingEvent.error.stack)) ||
-        getOwnerStack(event.error) !== getOwnerStack(pendingEvent.error)
-      )
-    })
-    // If there's nothing filtered out, the event is a brand new error
-    if (pendingEvents.length === events.length) {
-      pendingEvents.push(pendingEvent)
-      return pendingEvents
-    }
-    // Otherwise remain the same events
-    return events
+    return mergeErrorEvent(events, pendingEvent, getOwnerStack)
   }
 
   return useReducer(
@@ -505,7 +525,8 @@ export function useErrorOverlayReducer(
                 errors: pushErrorFilterDuplicates(
                   state.errors,
                   state.nextId,
-                  action.reason
+                  action.reason,
+                  action.metadata
                 ),
               }
             }
@@ -518,7 +539,8 @@ export function useErrorOverlayReducer(
                   errors: pushErrorFilterDuplicates(
                     state.errors,
                     state.nextId,
-                    action.reason
+                    action.reason,
+                    action.metadata
                   ),
                 },
               }

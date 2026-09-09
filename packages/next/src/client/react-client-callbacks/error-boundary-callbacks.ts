@@ -13,6 +13,7 @@ const devToolErrorMod: typeof import('../../next-devtools/userspace/app/errors')
     : {
         decorateDevError: (error: unknown) => error as Error,
         handleClientError: () => {},
+        setRuntimeErrorMetadata: () => {},
         originConsoleError: console.error.bind(console),
       }
 
@@ -89,7 +90,7 @@ export function onCaughtError(
     // Log and report the error with location but without modifying the error stack
     devToolErrorMod.originConsoleError('%o\n\n%s', thrownValue, errorLocation)
 
-    devToolErrorMod.handleClientError(error)
+    devToolErrorMod.handleClientError(error, { fatal: false })
   } else {
     devToolErrorMod.originConsoleError(thrownValue)
   }
@@ -101,6 +102,7 @@ export function onUncaughtError(thrownValue: unknown) {
 
   if (process.env.NODE_ENV !== 'production') {
     const error = devToolErrorMod.decorateDevError(thrownValue)
+    devToolErrorMod.setRuntimeErrorMetadata(error, { fatal: true })
 
     // TODO: Add an adendum to the overlay telling people about custom error boundaries.
     reportGlobalError(error)

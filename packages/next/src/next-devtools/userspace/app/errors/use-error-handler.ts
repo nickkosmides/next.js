@@ -7,7 +7,10 @@ import isError from '../../../../lib/is-error'
 import { createConsoleError } from '../../../shared/console-error'
 import { coerceError, setOwnerStackIfAvailable } from './stitched-error'
 import { forwardUnhandledError, logUnhandledRejection } from '../forward-logs'
+import type { RuntimeErrorMetadata } from '../../../../server/dev/hot-reloader-types'
+import { isRecoverableError } from '../../../../client/react-client-callbacks/on-recoverable-error'
 import { dispatcher } from 'next/dist/compiled/next-devtools'
+import { takeRuntimeErrorMetadata } from './runtime-error-metadata'
 
 const queueMicroTask =
   globalThis.queueMicrotask || ((cb: () => void) => Promise.resolve().then(cb))
@@ -31,10 +34,14 @@ export function handleConsoleError(
   queueMicroTask(() => dispatcher.onUnhandledError(error))
 }
 
-export function handleClientError(error: Error) {
+export function handleClientError(
+  error: Error,
+  metadata?: RuntimeErrorMetadata
+) {
+  const occurrence = metadata ?? takeRuntimeErrorMetadata(error)
   // The overlay queues events until its own root mounts. Do not depend on
   // HotReload committing: an initial application failure can prevent that.
-  queueMicroTask(() => dispatcher.onUnhandledError(error))
+  queueMicroTask(() => dispatcher.onUnhandledError(error, occurrence))
 }
 
 function onUnhandledError(event: WindowEventMap['error']): void | boolean {
@@ -48,7 +55,11 @@ function onUnhandledError(event: WindowEventMap['error']): void | boolean {
   if (thrownValue) {
     const error = coerceError(thrownValue)
     setOwnerStackIfAvailable(error)
-    handleClientError(error)
+    handleClientError(
+      error,
+      takeRuntimeErrorMetadata(error) ??
+        (isRecoverableError(error) ? undefined : { fatal: false })
+    )
     forwardUnhandledError(error)
   }
 }
@@ -63,7 +74,7 @@ function onUnhandledRejection(ev: WindowEventMap['unhandledrejection']): void {
   const error = coerceError(reason)
   setOwnerStackIfAvailable(error)
 
-  dispatcher.onUnhandledRejection(error)
+  dispatcher.onUnhandledRejection(error, { fatal: false })
 
   logUnhandledRejection(reason)
 }
