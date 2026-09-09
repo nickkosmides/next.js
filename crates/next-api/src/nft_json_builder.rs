@@ -100,6 +100,7 @@ pub(crate) struct NftJsonBuilder {
 
 impl NftJsonBuilder {
     pub async fn new(project: ResolvedVc<Project>, nft_path: &FileSystemPath) -> Result<Self> {
+        let project_ref = project.await?;
         let mut root_configs = FxHashMap::default();
 
         // Files not listed under `additionalRoots` have paths relative to the nft.json file, which
@@ -126,9 +127,25 @@ impl NftJsonBuilder {
             },
         );
 
+        let mut additional_roots = Vec::with_capacity(project_ref.additional_roots.len());
+        for (name, root) in &project_ref.additional_roots {
+            let file_system = root.file_system.connect().to_resolved().await?;
+            root_configs.insert(
+                ResolvedVc::upcast(file_system),
+                RootConfig {
+                    base: file_system.root().owned().await?,
+                    additional_root_index: Some(additional_roots.len()),
+                },
+            );
+            additional_roots.push(AdditionalRootConfig {
+                name: name.clone(),
+                absolute_path: root.canonical_path.clone(),
+            });
+        }
+
         Ok(Self {
             root_configs,
-            additional_roots: Vec::new(),
+            additional_roots,
             asset_refs: Vec::new(),
         })
     }
