@@ -134,6 +134,7 @@ export async function formatRuntimeErrors(
       errorName,
       message,
       fatal: error.fatal,
+      ...(error.boundary ? { boundary: error.boundary } : {}),
       stack,
     })
   }
@@ -164,6 +165,13 @@ function isRuntimeErrorStateError(
       value.type !== 'recoverable' &&
       value.type !== 'console') ||
     typeof value.fatal !== 'boolean' ||
+    (value.boundary !== undefined &&
+      (!isRecord(value.boundary) ||
+        !['default-global', 'custom-global', 'custom'].includes(
+          value.boundary.kind as string
+        ) ||
+        (value.boundary.name !== undefined &&
+          typeof value.boundary.name !== 'string'))) ||
     !Array.isArray(value.frames)
   ) {
     return false

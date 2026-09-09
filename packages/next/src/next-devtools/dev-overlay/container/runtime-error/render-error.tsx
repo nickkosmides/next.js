@@ -1,3 +1,4 @@
+import type { RuntimeErrorBoundary } from '../../../../server/dev/hot-reloader-types'
 import type { OverlayState } from '../../shared'
 import type { StackFrame } from '../../../shared/stack-frame'
 
@@ -15,6 +16,7 @@ export type SupportedErrorEvent = {
   type: 'runtime' | 'recoverable' | 'console'
   /** A React root failure or a Next.js unrecoverable rendering path. */
   isFatal: boolean
+  boundary?: RuntimeErrorBoundary
 }
 
 type Props = {
