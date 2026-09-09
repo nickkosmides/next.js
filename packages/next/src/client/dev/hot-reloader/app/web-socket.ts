@@ -15,6 +15,7 @@ import {
 import { logQueue } from '../../../../next-devtools/userspace/app/forward-logs'
 import { InvariantError } from '../../../../shared/lib/invariant-error'
 import { WEB_SOCKET_MAX_RECONNECTIONS } from '../../../../lib/constants'
+import { createRuntimeErrorStateReporter } from '../runtime-error-state'
 
 let reconnections = 0
 let reloading = false
@@ -39,6 +40,10 @@ export function createWebSocket(
       webSocket.send(data)
     }
   }
+  const runtimeErrorStateReporter = process.env
+    .__NEXT_EXPOSE_RUNTIME_ERRORS_TO_HMR
+    ? createRuntimeErrorStateReporter(sendMessage)
+    : undefined
 
   const processTurbopackMessage = createProcessTurbopackMessage(sendMessage)
 
@@ -55,6 +60,7 @@ export function createWebSocket(
 
     function handleOnline() {
       logQueue.onSocketReady(newWebSocket)
+      runtimeErrorStateReporter?.reportCurrent()
 
       reconnections = 0
       window.console.log('[HMR] connected')

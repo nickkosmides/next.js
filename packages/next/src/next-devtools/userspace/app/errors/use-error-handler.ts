@@ -1,4 +1,3 @@
-import { useEffect } from 'react'
 import { isNextRouterError } from '../../../../client/components/is-next-router-error'
 import {
   formatConsoleArgs,
@@ -8,16 +7,10 @@ import isError from '../../../../lib/is-error'
 import { createConsoleError } from '../../../shared/console-error'
 import { coerceError, setOwnerStackIfAvailable } from './stitched-error'
 import { forwardUnhandledError, logUnhandledRejection } from '../forward-logs'
+import { dispatcher } from 'next/dist/compiled/next-devtools'
 
 const queueMicroTask =
   globalThis.queueMicrotask || ((cb: () => void) => Promise.resolve().then(cb))
-
-type ErrorHandler = (error: Error) => void
-
-const errorQueue: Array<Error> = []
-const errorHandlers: Array<ErrorHandler> = []
-const rejectionQueue: Array<Error> = []
-const rejectionHandlers: Array<ErrorHandler> = []
 
 export function handleConsoleError(
   originError: unknown,
@@ -35,53 +28,13 @@ export function handleConsoleError(
   }
   setOwnerStackIfAvailable(error)
 
-  errorQueue.push(error)
-  for (const handler of errorHandlers) {
-    // Delayed the error being passed to React Dev Overlay,
-    // avoid the state being synchronously updated in the component.
-    queueMicroTask(() => {
-      handler(error)
-    })
-  }
+  queueMicroTask(() => dispatcher.onUnhandledError(error))
 }
 
 export function handleClientError(error: Error) {
-  errorQueue.push(error)
-  for (const handler of errorHandlers) {
-    // Delayed the error being passed to React Dev Overlay,
-    // avoid the state being synchronously updated in the component.
-    queueMicroTask(() => {
-      handler(error)
-    })
-  }
-}
-
-export function useErrorHandler(
-  handleOnUnhandledError: ErrorHandler,
-  handleOnUnhandledRejection: ErrorHandler
-) {
-  useEffect(() => {
-    // Handle queued errors.
-    errorQueue.forEach(handleOnUnhandledError)
-    rejectionQueue.forEach(handleOnUnhandledRejection)
-
-    // Listen to new errors.
-    errorHandlers.push(handleOnUnhandledError)
-    rejectionHandlers.push(handleOnUnhandledRejection)
-
-    return () => {
-      // Remove listeners.
-      errorHandlers.splice(errorHandlers.indexOf(handleOnUnhandledError), 1)
-      rejectionHandlers.splice(
-        rejectionHandlers.indexOf(handleOnUnhandledRejection),
-        1
-      )
-
-      // Reset error queues.
-      errorQueue.splice(0, errorQueue.length)
-      rejectionQueue.splice(0, rejectionQueue.length)
-    }
-  }, [handleOnUnhandledError, handleOnUnhandledRejection])
+  // The overlay queues events until its own root mounts. Do not depend on
+  // HotReload committing: an initial application failure can prevent that.
+  queueMicroTask(() => dispatcher.onUnhandledError(error))
 }
 
 function onUnhandledError(event: WindowEventMap['error']): void | boolean {
@@ -110,10 +63,7 @@ function onUnhandledRejection(ev: WindowEventMap['unhandledrejection']): void {
   const error = coerceError(reason)
   setOwnerStackIfAvailable(error)
 
-  rejectionQueue.push(error)
-  for (const handler of rejectionHandlers) {
-    handler(error)
-  }
+  dispatcher.onUnhandledRejection(error)
 
   logUnhandledRejection(reason)
 }

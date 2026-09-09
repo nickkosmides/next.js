@@ -1,3 +1,5 @@
+import type { RuntimeErrorStateUpdate } from '../server/dev/hot-reloader-types'
+import { getErrorSource } from '../shared/lib/error-source'
 import {
   ACTION_BEFORE_REFRESH,
   ACTION_BUILD_ERROR,
@@ -102,24 +104,41 @@ type OverlayStateWithRouter = OverlayState & { routerType: 'pages' | 'app' }
 
 let currentOverlayState: OverlayStateWithRouter | null = null
 
-export function getSerializedOverlayState(): OverlayStateWithRouter | null {
-  // Serialize error objects properly since Error properties are non-enumerable
-  // This is used when sending state via HMR/JSON.stringify
-  if (!currentOverlayState) return null
+export type SerializedRuntimeErrorState = RuntimeErrorStateUpdate['errorState']
+export type SerializedOverlayState = Omit<OverlayStateWithRouter, 'errors'> &
+  SerializedRuntimeErrorState
+const runtimeErrorStateListeners = new Set<
+  (state: SerializedRuntimeErrorState) => void
+>()
 
+export function getSerializedOverlayState(): SerializedOverlayState | null {
+  if (!currentOverlayState) {
+    return null
+  }
   return {
     ...currentOverlayState,
-    errors: currentOverlayState.errors.map((errorEvent: any) => ({
-      ...errorEvent,
-      error: errorEvent.error
-        ? {
-            name: errorEvent.error.name,
-            message: errorEvent.error.message,
-            stack: errorEvent.error.stack,
-          }
-        : null,
+    // Error properties are non-enumerable; serialize them explicitly.
+    errors: currentOverlayState.errors.map(({ error, ...event }) => ({
+      ...event,
+      error: {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        source: getErrorSource(error),
+      },
     })),
   }
+}
+
+export function subscribeToRuntimeErrorState(
+  listener: (state: SerializedRuntimeErrorState) => void
+) {
+  runtimeErrorStateListeners.add(listener)
+  const state = getSerializedOverlayState()
+  if (state) {
+    listener({ errors: state.errors, routerType: state.routerType })
+  }
+  return () => runtimeErrorStateListeners.delete(listener)
 }
 
 export function getSegmentTrieData(): SegmentTrieData | null {
@@ -278,6 +297,18 @@ function DevOverlayRoot({
   useEffect(() => {
     currentOverlayState = { ...state, routerType }
   }, [state, routerType])
+
+  useEffect(() => {
+    if (runtimeErrorStateListeners.size === 0) {
+      return
+    }
+    const { errors, routerType: currentRouterType } =
+      getSerializedOverlayState()!
+    const snapshot = { errors, routerType: currentRouterType }
+    for (const listener of runtimeErrorStateListeners) {
+      listener(snapshot)
+    }
+  }, [state.errors, routerType])
 
   useLayoutEffect(() => {
     const portalNode = shadowRoot.host
