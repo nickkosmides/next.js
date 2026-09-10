@@ -1,7 +1,7 @@
 import { nextTestSetup } from 'e2e-utils'
 
-// TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-// It likely mutates files in the isolated local fixture after setup.
+// This suite calls next.patchFile() to change fixture files after setup.
+// Deployment mode cannot mutate the deployed fixture.
 // @force-gate !deploy
 describe('app dir - not-found - group route', () => {
   const { next } = nextTestSetup({
