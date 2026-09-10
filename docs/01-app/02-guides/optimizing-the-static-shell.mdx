@@ -218,7 +218,7 @@ Render `PlanOptions` outside the team settings boundary:
 </main>
 ```
 
-Choose the cache lifetime from the data's freshness requirements. Keep data uncached when it must be recomputed for the request, even if caching would put more content in the shell. If the cached data has write paths, follow the [cache lifecycle guidance](/docs/app/getting-started/caching#keep-mutable-data-fresh) to connect them to invalidation and verify a write followed by a fresh read.
+Choose the cache lifetime from the data's freshness requirements. Keep data uncached when it must be recomputed for the request, even if caching would put more content in the shell. See [Caching](/docs/app/getting-started/caching) for cache keys, lifetimes, tags, and revalidation.
 
 The default `use cache` handler stores entries in memory as a best effort. Use [`use cache: remote`](/docs/app/api-reference/directives/use-cache-remote) when cached data must persist across instances and requests.
 
