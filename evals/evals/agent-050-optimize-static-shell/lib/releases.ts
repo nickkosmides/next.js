@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
 import { cookies } from 'next/headers'
 import { connection } from 'next/server'
 
@@ -22,11 +22,21 @@ export async function getCurrentViewer(): Promise<string> {
 }
 
 export async function getLaunchChecklist(): Promise<ReleaseChecklist> {
-  const source = await readFile(
-    new URL('../data/launch-checklist.json', import.meta.url),
-    'utf8'
-  )
+  const source = await readFile(launchChecklistUrl, 'utf8')
   return JSON.parse(source) as ReleaseChecklist
+}
+
+const launchChecklistUrl = new URL(
+  '../data/launch-checklist.json',
+  import.meta.url
+)
+
+export async function appendLaunchChecklistItem(item: string): Promise<void> {
+  const checklist = await getLaunchChecklist()
+  await writeFile(
+    launchChecklistUrl,
+    JSON.stringify({ ...checklist, items: [...checklist.items, item] }, null, 2)
+  )
 }
 
 export async function getLiveRollout(release: string): Promise<Rollout> {

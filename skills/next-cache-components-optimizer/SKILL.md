@@ -74,6 +74,7 @@ hear those words.
 - [ ] C  RED          locked instant(): the shell does not commit            → test-template.md
 - [ ] C-gate          VERIFY-RED: stop until the RED is trustworthy          → reference/red-test-robustness.md
 - [ ] D  FIX          apply the public static-shell patterns to reach GREEN
+- [ ] D-cache          for each new cache, find writers; if present, prove mutation freshness
 - [ ]      reuse existing loading UI; do not hand-build page skeletons
 - [ ]      match the completed render at every supported breakpoint
 - [ ] E  PARITY       the refactor changed only whether the route is instant
@@ -200,6 +201,21 @@ Run the scoped build and the locked test after each focused change. Phase D is
 complete only when the phase-C test passes on the production rig. A successful
 build by itself is not GREEN.
 
+If the fix adds or expands any `'use cache'` boundary, run the cache lifecycle
+gate before calling it complete. First determine whether any write path can
+change the cached result. If there are no writers, no on-demand invalidation is
+required. If there are writers, inventory all of them and connect the cached
+read to the invalidation path that preserves the intended freshness. Follow the Caching guide's
+[mutable data guidance](https://nextjs.org/docs/app/getting-started/caching#keep-mutable-data-fresh)
+for the API choice. `cacheLife` provides time-based freshness; it is not a
+substitute for invalidating after a write.
+
+Prove at least one representative lifecycle for each new mutable cache: populate
+the entry, perform a real mutation, then revisit or read again and assert the
+updated result. A passing `instant()` test proves shell readiness, not mutation
+freshness. If every writer cannot be identified and stale data is not an
+explicit product requirement, leave the read uncached.
+
 If the route already has a meaningful static shell and only URL-specific
 content is missing before a client navigation, stop. That is a Partial
 Prefetching optimization, not a static-shell change.
@@ -246,6 +262,9 @@ PR-specific items:
 - [ ] **Parity confirmed (E)**: same content, redirects, and state.
 - [ ] **Freshness preserved**: new cache scopes follow the data's existing or
       explicitly chosen lifetime.
+- [ ] **Mutations verified when applicable**: every new cache was checked for
+      writers; caches with writers have a passing populated-cache → write →
+      fresh-read flow.
 - [ ] **Existing loading UI reused**: no new page-mirroring skeleton.
 - [ ] **Shell matches the real render at supported desktop and mobile widths**.
 - [ ] **Baseline removed**: only the locked test from C remains.
