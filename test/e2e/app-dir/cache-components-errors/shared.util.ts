@@ -18,18 +18,14 @@ export interface CacheComponentsErrorsContext {
 export function runCacheComponentsErrorsTests(
   registerTests: (ctx: CacheComponentsErrorsContext) => void
 ) {
+  // This wrapper runs local builds to inspect prerender error diagnostics.
+  // Deploy mode requires successful setup and cannot run those local builds.
+  // @force-gate !deploy
   describe('Cache Components Errors', () => {
-    const { next, isTurbopack, isNextStart, isRspack, skipped } = nextTestSetup(
-      {
-        files: __dirname + '/fixtures/default',
-        skipStart: !isNextDev,
-        // TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-        // No deploy-specific incompatibility is documented.
-        skipDeployment: true,
-      }
-    )
-
-    if (skipped) return
+    const { next, isTurbopack, isNextStart, isRspack } = nextTestSetup({
+      files: __dirname + '/fixtures/default',
+      skipStart: !isNextDev,
+    })
 
     afterEach(async () => {
       if (isNextStart) {
