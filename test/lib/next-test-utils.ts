@@ -80,7 +80,12 @@ export function initNextServerScript(
   return new Promise((resolve, reject) => {
     const instance = spawn(
       'node',
-      [...((opts && opts.nodeArgs) || []), '--no-deprecation', scriptPath],
+      [
+        ...((opts && opts.nodeArgs) || []),
+        // Deprecated APIs may be vulnerable and must be flagged.
+        '--trace-deprecation',
+        scriptPath,
+      ],
       {
         env: { HOSTNAME: '::', ...env },
         cwd: opts && opts.cwd,
@@ -391,7 +396,13 @@ export function runNextCommand(
     debugPrint(`Running command "next ${argv.join(' ')}"`)
     const instance = spawn(
       'node',
-      [...(options.nodeArgs || []), '--no-deprecation', nextBin, ...argv],
+      [
+        ...(options.nodeArgs || []),
+        // Deprecated APIs can be vulnerable and must be flagged.
+        '--trace-deprecation',
+        nextBin,
+        ...argv,
+      ],
       {
         ...options.spawnOptions,
         cwd,
@@ -515,7 +526,13 @@ export function runNextCommandDev(
   return new Promise((resolve, reject) => {
     const instance = spawn(
       'node',
-      [...nodeArgs, '--no-deprecation', nextBin, ...argv],
+      [
+        ...nodeArgs,
+        // Deprecated APIs can be vulnerable and must be flagged.
+        '--trace-deprecation',
+        nextBin,
+        ...argv,
+      ],
       {
         cwd,
         env,
@@ -666,7 +683,12 @@ export function buildTS(
   return new Promise((resolve, reject) => {
     const instance = spawn(
       'node',
-      ['--no-deprecation', require.resolve('typescript/lib/tsc'), ...args],
+      [
+        // Deprecated APIs can be vulnerable and must be flagged.
+        '--trace-deprecation',
+        require.resolve('typescript/lib/tsc'),
+        ...args,
+      ],
       { cwd, env }
     )
     let output = ''
