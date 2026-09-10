@@ -3,8 +3,8 @@ import { nextTestSetup } from 'e2e-utils'
 const fileNames = ['1', '2.ext', '3.html']
 
 describe('GS(S)P with file extension', () => {
-  // TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-  // No deploy-specific incompatibility is documented.
+  // This suite inspects generated .html/.json files and reads .next/BUILD_ID.
+  // Deployment mode does not expose those local build artifacts.
   // @force-gate !deploy
   describe('production mode', () => {
     const { next } = nextTestSetup({

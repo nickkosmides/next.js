@@ -3,8 +3,8 @@ import { nextTestSetup } from 'e2e-utils'
 import { retry, waitFor } from 'next-test-utils'
 
 describe('Root Optional Catch-all Revalidate', () => {
-  // TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-  // No deploy-specific incompatibility is documented.
+  // This suite asserts new getStaticProps runtime logs after stale requests.
+  // Deploy-mode cliOutput contains build logs and does not update with those requests.
   // @force-gate !deploy
   describe('production mode', () => {
     const { next } = nextTestSetup({
