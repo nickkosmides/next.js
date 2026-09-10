@@ -2,8 +2,8 @@ import { nextTestSetup, isNextDev } from 'e2e-utils'
 import { join } from 'path'
 import { runTests } from '../dynamic-routing/shared'
 
-// TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-// It likely mutates files in the isolated local fixture after setup.
+// This suite calls next.patchFile() to change fixture files after setup.
+// Deployment mode cannot mutate the deployed fixture.
 // @force-gate !deploy
 describe('Dynamic Routing with Middleware', () => {
   const { next, isTurbopack } = nextTestSetup({

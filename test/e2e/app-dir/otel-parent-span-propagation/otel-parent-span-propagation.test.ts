@@ -4,8 +4,8 @@ import { type Collector, connectCollector } from './collector'
 
 const COLLECTOR_PORT = 9876
 
-// TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-// No deploy-specific incompatibility is documented.
+// The fixture sends spans to a collector bound to the test runner on localhost.
+// A remote deployment cannot reach that local collector.
 // @force-gate !deploy
 describe('otel-parent-span-propagation', () => {
   const { next } = nextTestSetup({
