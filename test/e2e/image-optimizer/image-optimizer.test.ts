@@ -14,8 +14,8 @@ function toQueryString(query: Record<string, any>): string {
 const largeSize = 1080
 
 describe('Image Optimizer', () => {
-  // TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-  // It likely asserts local CLI or runtime output that deploy tests do not expose.
+  // This suite calls next.patchFile() to change fixture files after setup.
+  // Deployment mode cannot mutate the deployed fixture.
   // @force-gate !deploy
   describe('config checks', () => {
     const { next } = nextTestSetup({
@@ -284,8 +284,8 @@ describe('Image Optimizer', () => {
       expect(res.status).toBe(200)
     })
   })
-  // TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-  // It likely asserts local CLI or runtime output that deploy tests do not expose.
+  // This suite calls next.patchFile() to change fixture files after setup.
+  // Deployment mode cannot mutate the deployed fixture.
   // @force-gate !deploy
   // @force-gate start
   describe('Server support for headers in next.config.js', () => {

@@ -5,8 +5,8 @@ import {
   waitForRedbox,
 } from 'next-test-utils'
 
-// TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-// It likely inspects local build artifacts that deploy tests do not expose.
+// This suite uses next.readFile() or next.readJSON() to inspect fixture or build files.
+// Deployment mode does not expose those files through the test instance.
 // @force-gate !deploy
 describe('Image localPatterns config', () => {
   const { next } = nextTestSetup({
