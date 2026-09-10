@@ -3,8 +3,8 @@ import { retry } from 'next-test-utils'
 
 const isoDateRegExp = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
 
-// TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-// Skip deployment so we can test the custom cache handlers log output
+// This suite asserts server log output produced by requests or cache operations.
+// Deploy-mode cliOutput contains build logs, not the live runtime logs under test.
 // @force-gate !deploy
 describe('use-cache-custom-handler', () => {
   const { next, isNextStart } = nextTestSetup({

@@ -2,8 +2,8 @@ import { nextTestSetup } from 'e2e-utils'
 import { hasErrorToast, retry, waitFor, waitForNoRedbox } from 'next-test-utils'
 import stripAnsi from 'strip-ansi'
 
-// TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-// It likely asserts local CLI or runtime output that deploy tests do not expose.
+// This suite asserts server log output produced by requests or cache operations.
+// Deploy-mode cliOutput contains build logs, not the live runtime logs under test.
 // @force-gate !deploy
 describe('app-custom-cache-handler-errors - get throws', () => {
   const { next, isNextDev, isTurbopack } = nextTestSetup({
@@ -94,8 +94,8 @@ describe('app-custom-cache-handler-errors - get throws', () => {
   })
 })
 
-// TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-// It likely asserts local CLI or runtime output that deploy tests do not expose.
+// This suite asserts server log output produced by requests or cache operations.
+// Deploy-mode cliOutput contains build logs, not the live runtime logs under test.
 // @force-gate !deploy
 describe('app-custom-cache-handler-errors - set throws', () => {
   const { next, isNextDev } = nextTestSetup({
