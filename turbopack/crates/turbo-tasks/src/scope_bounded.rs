@@ -412,15 +412,25 @@ mod tests {
 
     /// Helpers must actually add parallelism when threads are available: jobs that each block
     /// briefly should complete in far less than their serial sum.
+    #[cfg(not(target_family = "wasm"))]
     #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
-    // The work itself is genuinely parallel on wasm — it finishes in ~500ms of an 800ms serial sum.
-    // What hangs is teardown: dropping the runtime while these blocking helpers are still alive
-    // deadlocks there. Removed once the wasm runtime owns its lifetime.
-    #[cfg_attr(
-        target_family = "wasm",
-        ignore = "tokio runtime shutdown hangs on wasm while blocking threads are live"
-    )]
     async fn test_scope_runs_in_parallel() {
+        test_scope_runs_in_parallel_impl().await;
+    }
+
+    #[cfg(target_family = "wasm")]
+    #[test]
+    fn test_scope_runs_in_parallel() {
+        let runtime = tokio::runtime::Builder::new_multi_thread()
+            .worker_threads(4)
+            .enable_all()
+            .build()
+            .unwrap();
+        runtime.block_on(test_scope_runs_in_parallel_impl());
+        runtime.shutdown_background();
+    }
+
+    async fn test_scope_runs_in_parallel_impl() {
         const JOBS: usize = 16;
         const PER_JOB: Duration = Duration::from_millis(50);
         let started = Instant::now();
@@ -439,10 +449,14 @@ mod tests {
         .unwrap();
         let elapsed = started.elapsed();
         assert_eq!(results.len(), JOBS);
-        // Half the serial time is a loose bound on purpose: 4 threads should beat it comfortably,
-        // so a slow machine won't make this flaky.
+        let serial_time = JOBS as u32 * PER_JOB;
+        #[cfg(not(target_family = "wasm"))]
+        let deadline = serial_time / 2;
+        // Node Worker startup is expensive, but the test must still finish faster than serial work.
+        #[cfg(target_family = "wasm")]
+        let deadline = serial_time - PER_JOB;
         assert!(
-            elapsed < (JOBS as u32 * PER_JOB) / 2,
+            elapsed < deadline,
             "scope_bounded took {elapsed:?}; expected parallel speedup across worker threads"
         );
     }
