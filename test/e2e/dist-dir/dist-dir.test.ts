@@ -1,8 +1,8 @@
 import { nextTestSetup, isNextDev, isNextStart } from 'e2e-utils'
 import { BUILD_ID_FILE, BUILD_MANIFEST } from 'next/constants'
 
-// TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-// It likely asserts local CLI or runtime output that deploy tests do not expose.
+// This suite inspects the local dist directory and verifies that .next was not created.
+// Deployment mode does not expose the generated build directories.
 // @force-gate !deploy
 describe('distDir', () => {
   const { next } = nextTestSetup({
@@ -28,8 +28,8 @@ describe('distDir', () => {
 })
 
 if (isNextStart) {
-  // TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-  // It likely asserts local CLI or runtime output that deploy tests do not expose.
+  // This suite runs next.build() to inspect build output or errors.
+  // Deploy mode requires a successful deployment and cannot run these local builds.
   // @force-gate !deploy
   describe('distDir config validation', () => {
     const { next } = nextTestSetup({

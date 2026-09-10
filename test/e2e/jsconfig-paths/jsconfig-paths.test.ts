@@ -2,8 +2,8 @@ import { nextTestSetup, isNextDev, isNextStart } from 'e2e-utils'
 import { retry } from 'next-test-utils'
 import stripAnsi from 'next/dist/compiled/strip-ansi'
 
-// TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-// It likely asserts local CLI or runtime output that deploy tests do not expose.
+// This suite calls next.readFile() to inspect local build artifacts.
+// Deployment mode does not expose those files.
 // @force-gate !deploy
 describe('jsconfig paths', () => {
   const { next } = nextTestSetup({
@@ -96,8 +96,8 @@ describe('jsconfig paths', () => {
   }
 })
 
-// TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-// It likely asserts local CLI or runtime output that deploy tests do not expose.
+// This suite reads and rewrites fixture source/configuration before restarting Next.js.
+// Deployment mode cannot read or mutate the deployed fixture.
 // @force-gate !deploy
 describe('jsconfig paths without baseurl', () => {
   const { next } = nextTestSetup({

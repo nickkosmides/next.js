@@ -15,8 +15,8 @@ const reactDependencies = {
   'react-dom': '19.3.0-canary-fef12a01-20260413',
 }
 
-// TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-// It likely mutates files in the isolated local fixture after setup.
+// This suite runs next.build() to inspect build output or errors.
+// Deploy mode requires a successful deployment and cannot run these local builds.
 // @force-gate !deploy
 describe('CLI Usage', () => {
   const { next, isNextStart } = nextTestSetup({
