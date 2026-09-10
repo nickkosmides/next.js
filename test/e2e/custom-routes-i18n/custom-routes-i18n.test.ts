@@ -3,8 +3,8 @@ import cheerio from 'cheerio'
 import { findPort, retry } from 'next-test-utils'
 import { nextTestSetup, isNextDev } from 'e2e-utils'
 
-// TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-// It likely mutates files in the isolated local fixture after setup.
+// This suite calls next.patchFile() to change fixture files after setup.
+// Deployment mode cannot mutate the deployed fixture.
 // @force-gate !deploy
 describe('Custom routes i18n', () => {
   const { next } = nextTestSetup({

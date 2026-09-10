@@ -418,8 +418,8 @@ function runTests({
 
 describe('404 handling', () => {
   describe('custom _error', () => {
-    // TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-    // It likely mutates files in the isolated local fixture after setup.
+    // These requests use the local server port and assume a localhost origin.
+    // Deployment mode has no local port; the requests currently target localhost:0.
     // @force-gate !deploy
     describe('server mode', () => {
       const { next } = nextTestSetup({
@@ -428,8 +428,8 @@ describe('404 handling', () => {
 
       runTests({ next, isDev: isNextDev, isPages404: false })
     })
-    // TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-    // It likely mutates files in the isolated local fixture after setup.
+    // These requests use the local server port and assume a localhost origin.
+    // Deployment mode has no local port; the requests currently target localhost:0.
     // @force-gate !deploy
     // @force-gate start
     describe('export mode', () => {
@@ -474,8 +474,8 @@ describe('404 handling', () => {
   })
 
   describe('pages/404', () => {
-    // TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-    // It likely mutates files in the isolated local fixture after setup.
+    // This suite deletes fixture files before checking Next.js behavior.
+    // Deployment mode cannot delete files in the deployed application.
     // @force-gate !deploy
     describe('server mode', () => {
       const { next } = nextTestSetup({
@@ -505,8 +505,8 @@ describe('404 handling', () => {
 
       runTests({ next, isDev: isNextDev, isPages404: true })
     })
-    // TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-    // It likely mutates files in the isolated local fixture after setup.
+    // This suite deletes fixture files before checking Next.js behavior.
+    // Deployment mode cannot delete files in the deployed application.
     // @force-gate !deploy
     // @force-gate start
     describe('pages/404 export mode', () => {

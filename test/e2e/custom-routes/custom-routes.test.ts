@@ -13,8 +13,8 @@ import {
 } from 'next-test-utils'
 import { nextTestSetup, isNextDev } from 'e2e-utils'
 
-// TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-// It likely asserts local CLI or runtime output that deploy tests do not expose.
+// This suite calls next.patchFile() to change fixture files after setup.
+// Deployment mode cannot mutate the deployed fixture.
 // @force-gate !deploy
 describe('Custom routes', () => {
   const { next } = nextTestSetup({
@@ -3472,8 +3472,8 @@ describe('Custom routes', () => {
     })
   }
 })
-// TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-// It likely asserts local CLI or runtime output that deploy tests do not expose.
+// This suite calls next.patchFile() to change fixture files after setup.
+// Deployment mode cannot mutate the deployed fixture.
 // @force-gate !deploy
 describe('Custom routes no-op rewrite', () => {
   const { next, isTurbopack, isNextStart } = nextTestSetup({
@@ -3530,8 +3530,8 @@ describe('Custom routes no-op rewrite', () => {
   })
 })
 
-// TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-// It likely asserts local CLI or runtime output that deploy tests do not expose.
+// This suite calls next.patchFile() to change fixture files after setup.
+// Deployment mode cannot mutate the deployed fixture.
 // @force-gate !deploy
 describe('Custom routes solo types', () => {
   const { next } = nextTestSetup({
@@ -3654,8 +3654,8 @@ describe('Custom routes solo types', () => {
     }
   })
 })
-// TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-// It likely asserts local CLI or runtime output that deploy tests do not expose.
+// This suite calls next.patchFile() to change fixture files after setup.
+// Deployment mode cannot mutate the deployed fixture.
 // @force-gate !deploy
 // @force-gate start
 describe('Custom routes export', () => {

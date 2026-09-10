@@ -2,8 +2,8 @@ import cheerio from 'cheerio'
 import { nextTestSetup, isNextDev } from 'e2e-utils'
 import { retry } from 'next-test-utils'
 
-// TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-// It likely expects a local build failure instead of a successful deployment.
+// This suite calls next.patchFile() to change fixture files after setup.
+// Deployment mode cannot mutate the deployed fixture.
 // @force-gate !deploy
 describe('Dynamic Optional Routing', () => {
   const { next } = nextTestSetup({
@@ -217,8 +217,8 @@ describe('Dynamic Optional Routing', () => {
   }
 })
 
-// TODO(deploy-test-completion): Re-enable this suite in deploy mode.
-// It likely expects a local build failure instead of a successful deployment.
+// This suite calls next.patchFile() to change fixture files after setup.
+// Deployment mode cannot mutate the deployed fixture.
 // @force-gate !deploy
 describe('Dynamic Optional Routing - build validation', () => {
   const { next } = nextTestSetup({
